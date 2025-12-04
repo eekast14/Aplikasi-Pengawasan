@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Aplikasi Pengawasan</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    padding: 15px;
+    background: #f7f7f7;
+}
+.container {
+    max-width: 900px;
+    margin: auto;
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+input, select, textarea {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+button {
+    background: #28a745;
+    color: white;
+    padding: 12px;
+    border: none;
+    margin-top: 10px;
+    width: 100%;
+    border-radius: 5px;
+    font-size: 16px;
+}
+.preview-img {
+    width: 100%;
+    max-height: 250px;
+    object-fit: cover;
+    margin: 5px 0;
+    border-radius: 5px;
+}
+#signature-pad {
+    border: 2px dashed #bbb;
+    width: 100%;
+    height: 200px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h2><b>APLIKASI PENGAWASAN</b></h2>
+<hr>
+
+<b>Pilih Jenis Laporan:</b>
+<select id="jenisLaporan">
+    <option value="UTTP">UTTP</option>
+    <option value="BDKT">BDKT</option>
+    <option value="POTENSI">POTENSI</option>
+</select>
+
+<b>Nama Perusahaan</b>
+<input type="text" id="namaPerusahaan">
+
+<b>Alamat Perusahaan</b>
+<textarea id="alamatPerusahaan"></textarea>
+
+<b>Kecamatan</b>
+<input type="text" id="kecamatan">
+
+<b>Petugas</b>
+<input type="text" id="petugas">
+
+<b>Keterangan</b>
+<textarea id="keterangan"></textarea>
+
+<hr>
+
+<b>Upload Foto:</b>
+<input type="file" multiple accept="image/*" id="fotoInput">
+<div id="fotoPreview"></div>
+
+<hr>
+
+<b>Tanda Tangan:</b>
+<canvas id="signature-pad"></canvas>
+<button id="clearTTD" style="background:#dc3545">Hapus TTD</button>
+
+<hr>
+
+<b>Lokasi (GPS):</b>
+<button onclick="getLocation()">Ambil Lokasi</button>
+<div id="lokasiText"></div>
+
+<hr>
+
+<button onclick="kirimLaporan()">KIRIM & SIMPAN</button>
+
+</div>
+
+<script>
+// ================================
+// URL APPS SCRIPT (SUDAH BENAR)
+// ================================
+const APPS_SCRIPT_URL =
+  "https://script.google.com/macros/s/AKfycbzv96WkN2449nojohL8t_RF-TTXfqqrAhpdYLZRLJCZvo4PSHCxPbxk05HTj6b9NeST/exec";
+
+// ================================
+// Signature Pad
+// ================================
+let canvas = document.getElementById("signature-pad");
+let ctx = canvas.getContext("2d");
+let drawing = false;
+
+canvas.addEventListener("mousedown", () => drawing = true);
+canvas.addEventListener("mouseup", () => drawing = false);
+canvas.addEventListener("mousemove", draw);
+
+function draw(e) {
+    if (!drawing) return;
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = "#000";
+    ctx.lineTo(e.offsetX, e.offsetY);
+    ctx.stroke();
+}
+
+// Clear canvas
+document.getElementById("clearTTD").onclick = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+};
+
+// ================================
+// FOTO PREVIEW
+// ================================
+document.getElementById("fotoInput").addEventListener("change", function(){
+    const preview = document.getElementById("fotoPreview");
+    preview.innerHTML = "";
+    Array.from(this.files).forEach(file =>{
+        const img = document.createElement("img");
+        img.className = "preview-img";
+        img.src = URL.createObjectURL(file);
+        preview.appendChild(img);
+    })
+});
+
+// ================================
+// LOKASI
+// ================================
+let lokasiUser = null;
+
+function getLocation() {
+    if (!navigator.geolocation) {
+        alert("Perangkat tidak mendukung GPS.");
+        return;
+    }
+    navigator.geolocation.getCurrentPosition(pos=>{
+        lokasiUser = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude
+        };
+        document.getElementById("lokasiText").innerHTML =
+          "Lat: " + lokasiUser.lat + "<br>Lng: " + lokasiUser.lng;
+    });
+}
+
+// ================================
+// KIRIM DATA
+// ================================
+async function kirimLaporan() {
+    const jenis = document.getElementById("jenisLaporan").value;
+
+    // foto → base64
+    const files = document.getElementById("fotoInput").files;
+    const fotoPromises = Array.from(files).map(f => {
+        return new Promise(resolve=>{
+            let reader = new FileReader();
+            reader.onload = ()=> resolve({name: f.name, data: reader.result});
+            reader.readAsDataURL(f);
+        });
+    });
+    const fotoBase64 = await Promise.all(fotoPromises);
+
+    // tanda tangan → base64
+    const ttdBase64 = canvas.toDataURL("image/png");
+
+    // semua data
+    const data = {
+        jenis: jenis,
+        namaPerusahaan: document.getElementById("namaPerusahaan").value,
+        alamatPerusahaan: document.getElementById("alamatPerusahaan").value,
+        kecamatan: document.getElementById("kecamatan").value,
+        petugas: document.getElementById("petugas").value,
+        keterangan: document.getElementById("keterangan").value,
+        photos: fotoBase64,
+        signature: ttdBase64,
+        location: lokasiUser,
+        id: Date.now()
+    };
+
+    // kirim ke Apps Script
+    let res = await fetch(APPS_SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify(data)
+    });
+
+    let hasil = await res.json();
+    alert("STATUS: " + hasil.status);
+}
+</script>
+
+</body>
+</html>
