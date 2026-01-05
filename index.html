@@ -560,12 +560,14 @@ async function submitReport(form, typeKey){
   }
 
   // save local
-  const storageKey = typeKey==='UTTP' ? 'reports_UTTP' : (typeKey==='BDKT' ? 'reports_BDKT' : 'reports_POTENSI')
+  // ❌ DISABLE localStorage (hindari QuotaExceeded)
+// pushLocal(storageKey, data)
+
  /* pushLocal(storageKey, data)*/
 
   // map markers
   if(data.location) {
-    pushLocal('map_markers', { id:data.id, jenis:typeKey, title: data.namaPerusahaan||data.nama||typeKey, lat:data.location.lat, lng:data.location.lng, ts:data.timestamp })
+    // ❌ disable map local storage
     if(typeof addMarker === 'function') addMarker({id:data.id, title:data.namaPerusahaan||data.nama||typeKey, lat:data.location.lat, lng:data.location.lng, jenis:typeKey, ts:data.timestamp})
   }
 
