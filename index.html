@@ -412,9 +412,11 @@ const CSV_PUBLISHED_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRKPk
    Utilities (localStorage helpers)
    ====================================================== */
 function uid(prefix='id'){ return prefix + '_' + Date.now() + '_' + Math.floor(Math.random()*1000) }
-function getLocal(key){ try{ const v=localStorage.getItem(key); return v?JSON.parse(v):[] }catch(e){ return [] } }
+
+/*function getLocal(key){ try{ const v=localStorage.getItem(key); return v?JSON.parse(v):[] }catch(e){ return [] } }
 function setLocal(key, arr){ localStorage.setItem(key, JSON.stringify(arr)) }
-function pushLocal(key, item){ const a = getLocal(key); a.push(item); setLocal(key,a); return a }
+function pushLocal(key, item){ const a = getLocal(key); a.push(item); setLocal(key,a); return a } */
+  
 
 /* ======================================================
    Navigation helpers
@@ -559,7 +561,7 @@ async function submitReport(form, typeKey){
 
   // save local
   const storageKey = typeKey==='UTTP' ? 'reports_UTTP' : (typeKey==='BDKT' ? 'reports_BDKT' : 'reports_POTENSI')
-  pushLocal(storageKey, data)
+ /* pushLocal(storageKey, data)*/
 
   // map markers
   if(data.location) {
