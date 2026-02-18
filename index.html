@@ -410,15 +410,8 @@ canvas.signature{width:100%;height:140px;border:1px solid #ccc;border-radius:6px
 const APPS_SCRIPT_URL =
  "https://script.google.com/macros/s/AKfycbw1JKPNXKZ4ief6OQSou2Q-Ye3adGKUR9nDVTlebRqJwnLcQ5OrfafZftUfUCA3S5fO/exec";
 
-/* ======================================================
-   Utilities (localStorage helpers)
-   ====================================================== */
-function uid(prefix='id'){ return prefix + '_' + Date.now() + '_' + Math.floor(Math.random()*1000) }
+unction uid(prefix='id'){ return prefix + '_' + Date.now() + '_' + Math.floor(Math.random()*1000) }
 
-/*function getLocal(key){ try{ const v=localStorage.getItem(key); return v?JSON.parse(v):[] }catch(e){ return [] } }
-function setLocal(key, arr){ localStorage.setItem(key, JSON.stringify(arr)) }
-function pushLocal(key, item){ const a = getLocal(key); a.push(item); setLocal(key,a); return a } */
-  
 
 /* ======================================================
    Navigation helpers
@@ -561,11 +554,7 @@ async function submitReport(form, typeKey){
     if(parts.length===2) data.location = { lat: parseFloat(parts[0]), lng: parseFloat(parts[1]) }
   }
 
-  // save local
-  // ❌ DISABLE localStorage (hindari QuotaExceeded)
-// pushLocal(storageKey, data)
-
- /* pushLocal(storageKey, data)*/
+  
 
   // map markers
   if(data.location) {
@@ -695,6 +684,8 @@ function saveOverlayMarker(){
 
 <script>
  let chartUttp = null;
+  let chartBdkt = null;
+
 
 async function loadGrafikUTTP(){
   try{
