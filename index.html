@@ -363,6 +363,16 @@ canvas.signature{width:100%;height:140px;border:1px solid #ccc;border-radius:6px
         <canvas id="chartUttp" height="220"></canvas>
       </div>
       <div class="card chart-wrap">
+  <h4>UTTP — Per Bulan</h4>
+  <canvas id="chartBulan" height="220"></canvas>
+</div>
+
+<div class="card chart-wrap">
+  <h4>UTTP — Per Kecamatan</h4>
+  <canvas id="chartKecamatan" height="220"></canvas>
+</div>
+
+      <div class="card chart-wrap">
         <h4 style="margin-top:0">BDKT — Melanggar vs Tidak</h4>
         <canvas id="chartBdkt" height="220"></canvas>
       </div>
@@ -684,6 +694,9 @@ function saveOverlayMarker(){
 
 <script>
  let chartUttp = null;
+  let chartBulan = null;
+let chartKecamatan = null;
+
   let chartBdkt = null;
 
 
@@ -691,17 +704,13 @@ async function loadGrafikUTTP(){
   try{
     const year = document.getElementById("filter-year").value;
 
+    /* ===== UTTP MELANGGAR / TIDAK ===== */
     const res = await fetch(
       APPS_SCRIPT_URL + `?mode=grafik&jenis=UTTP&year=${year}`
     );
-
     const data = await res.json();
 
-    const canvas = document.getElementById("chartUttp");
-    if(!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-
+    const ctx = document.getElementById("chartUttp").getContext("2d");
     if(chartUttp) chartUttp.destroy();
 
     chartUttp = new Chart(ctx,{
@@ -723,10 +732,67 @@ async function loadGrafikUTTP(){
       }
     });
 
+
+    /* ===== PER BULAN ===== */
+    const resBulan = await fetch(
+      APPS_SCRIPT_URL + `?mode=grafik_bulan&year=${year}`
+    );
+    const dataBulan = await resBulan.json();
+
+    const ctxBulan = document.getElementById("chartBulan").getContext("2d");
+    if(chartBulan) chartBulan.destroy();
+
+    chartBulan = new Chart(ctxBulan,{
+      type:"bar",
+      data:{
+        labels:["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Ags","Sep","Okt","Nov","Des"],
+        datasets:[{
+          label:"Jumlah UTTP",
+          data:dataBulan.bulan,
+          backgroundColor:"#3498db"
+        }]
+      },
+      options:{
+        responsive:true,
+        scales:{ y:{ beginAtZero:true } }
+      }
+    });
+
+
+    /* ===== PER KECAMATAN ===== */
+    const resKec = await fetch(
+      APPS_SCRIPT_URL + `?mode=grafik_kecamatan&year=${year}`
+    );
+    const dataKec = await resKec.json();
+
+    const labelsKec = Object.keys(dataKec);
+    const valuesKec = Object.values(dataKec);
+
+    const ctxKec = document.getElementById("chartKecamatan").getContext("2d");
+    if(chartKecamatan) chartKecamatan.destroy();
+
+    chartKecamatan = new Chart(ctxKec,{
+      type:"bar",
+      data:{
+        labels:labelsKec,
+        datasets:[{
+          label:"Jumlah UTTP",
+          data:valuesKec,
+          backgroundColor:"#9b59b6"
+        }]
+      },
+      options:{
+        responsive:true,
+        scales:{ y:{ beginAtZero:true } }
+      }
+    });
+
   }catch(err){
     console.error("Grafik error:", err);
   }
 }
+
+  
   document.addEventListener("DOMContentLoaded", initApp);
 </script>
   </body>
